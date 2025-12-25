@@ -1,13 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/recipe_provider.dart';
 import 'package:resepin/data/models/recipe_model.dart';
 import '../../../core/constants/app_routes.dart';
+import '../providers/recipe_provider.dart';
+// Import yang diperlukan untuk memuat gambar dari File
+import 'dart:io'; 
 
 class RecipeDetailScreen extends StatelessWidget {
   final Recipe recipe;
 
   const RecipeDetailScreen({super.key, required this.recipe});
+
+  // Fungsi Pembantu untuk menentukan jenis gambar
+  Widget _buildDetailImage(String imagePath) {
+    // 1. Cek apakah path diawali dengan 'assets/' (path statis)
+    if (imagePath.startsWith('assets/')) {
+      return Image.asset(
+        imagePath,
+        fit: BoxFit.cover,
+        // ErrorBuilder untuk asset
+        errorBuilder: (c, o, s) => Container(
+          color: Colors.grey[300],
+          child: const Center(child: Icon(Icons.broken_image, size: 80, color: Colors.grey)),
+        ),
+      );
+    } 
+    // 2. Jika bukan 'assets/', anggap sebagai path file lokal (dinamis)
+    else if (imagePath.isNotEmpty) {
+      final file = File(imagePath);
+      // Memeriksa apakah file ada sebelum mencoba memuat
+      if (file.existsSync()) {
+        return Image.file(
+          file,
+          fit: BoxFit.cover,
+        );
+      }
+    }
+    
+    // 3. Placeholder default jika path tidak valid atau kosong
+    return Container(
+      color: Colors.grey[300],
+      child: const Center(child: Icon(Icons.restaurant, size: 80, color: Colors.grey)),
+    );
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -18,12 +54,17 @@ class RecipeDetailScreen extends StatelessWidget {
             expandedHeight: 250,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(recipe.name),
-              background: Image.asset(
-                recipe.imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (c, o, s) => Container(color: Colors.grey[300]),
+              title: Text(
+                recipe.name,
+                // Pastikan teks terlihat di atas gambar
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface, 
+                  shadows: const [
+                    Shadow(blurRadius: 4, color: Colors.black54)
+                  ]
+                ),
               ),
+              background: _buildDetailImage(recipe.imagePath), // <--- Menggunakan fungsi baru
             ),
             actions: [
               IconButton(
@@ -91,7 +132,7 @@ class RecipeDetailScreen extends StatelessWidget {
                         Text('${ingredient.amount} ${ingredient.unit} ${ingredient.name}'),
                       ],
                     ),
-                  )),
+                  )).toList(),
                   const SizedBox(height: 24),
                   Text(
                     'Langkah Memasak',
@@ -119,7 +160,7 @@ class RecipeDetailScreen extends StatelessWidget {
                         ],
                       ),
                     );
-                  }),
+                  }).toList(),
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
@@ -162,13 +203,14 @@ class RecipeDetailScreen extends StatelessWidget {
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Hapus'),
             onPressed: () {
+              // Menggunakan Consumer untuk mendapatkan provider saat dialog dibangun
               Provider.of<RecipeProvider>(context, listen: false).deleteRecipe(recipe.id!);
               Navigator.of(ctx).pop(); // Tutup dialog
-              Navigator.of(context).pop(); // Kembali ke halaman sebelumnya
+              Navigator.of(context).pop(); // Kembali ke halaman sebelumnya (Recipe Home Screen)
             },
           ),
         ],
       ),
     );
   }
-}
+}     

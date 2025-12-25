@@ -3,6 +3,7 @@ import 'package:resepin/features/recipe/screens/add_edit_recipe_screen.dart';
 import 'package:resepin/features/recipe/screens/interactive_cooking_screen.dart';
 import 'package:resepin/features/recipe/screens/recipe_detail_screen.dart';
 import 'package:resepin/features/recipe/screens/recipe_home_screen.dart';
+import 'package:resepin/features/recipe/screens/statistics_screen.dart';
 import 'package:resepin/features/search/screens/search_screen.dart';
 import 'package:resepin/features/favorite/screens/favorite_screen.dart';
 import 'core/constants/app_routes.dart';
@@ -19,6 +20,11 @@ class AppRoutesGenerator {
         final args = settings.arguments as Recipe?;
         return MaterialPageRoute(
           builder: (_) => AddEditRecipeScreen(recipe: args),
+        );
+
+      case AppRoutes.stats:
+        return MaterialPageRoute(
+          builder: (_) => const StatisticsScreen(),
         );
 
       case AppRoutes.recipeDetail:

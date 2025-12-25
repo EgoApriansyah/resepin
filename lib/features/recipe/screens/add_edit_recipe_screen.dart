@@ -1,8 +1,13 @@
+// lib/features/recipe/screens/add_edit_recipe_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
 import 'package:resepin/data/models/recipe_model.dart';
 import 'package:resepin/data/models/ingredient_model.dart';
+// Tambahkan import ini
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class AddEditRecipeScreen extends StatefulWidget {
   final Recipe? recipe;
@@ -18,7 +23,9 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _categoryController;
-  late final TextEditingController _imagePathController;
+  
+  // Ubah dari TextEditingController menjadi String?
+  String? _imagePath; // Menyimpan path file gambar lokal
 
   List<String> _steps = [''];
   List<Ingredient> _ingredients = [Ingredient(name: '', amount: 0, unit: '')];
@@ -30,7 +37,14 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
     _nameController = TextEditingController(text: recipe?.name ?? '');
     _descriptionController = TextEditingController(text: recipe?.description ?? '');
     _categoryController = TextEditingController(text: recipe?.category ?? '');
-    _imagePathController = TextEditingController(text: recipe?.imagePath ?? 'assets/images/placeholder.jpg');
+    
+    // Inisialisasi _imagePath dari data resep yang ada
+    if (recipe != null && recipe.imagePath != 'assets/images/placeholder.jpg') {
+      _imagePath = recipe.imagePath;
+    } else {
+      _imagePath = null;
+    }
+
     if (recipe != null) {
       _steps = List.from(recipe.steps);
       _ingredients = List.from(recipe.ingredients);
@@ -42,12 +56,26 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
     _nameController.dispose();
     _descriptionController.dispose();
     _categoryController.dispose();
-    _imagePathController.dispose();
     super.dispose();
+  }
+  
+  // *** FUNGSI BARU: Pilih Gambar ***
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _imagePath = pickedFile.path;
+      });
+    }
   }
 
   void _saveRecipe() {
     if (_formKey.currentState!.validate()) {
+      // Tentukan path gambar yang akan disimpan. Gunakan placeholder jika kosong.
+      final imageToSave = _imagePath ?? 'assets/images/placeholder.jpg';
+      
       final newRecipe = Recipe(
         id: widget.recipe?.id,
         name: _nameController.text,
@@ -55,7 +83,8 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
         category: _categoryController.text,
         steps: _steps.where((s) => s.isNotEmpty).toList(),
         ingredients: _ingredients.where((i) => i.name.isNotEmpty).toList(),
-        imagePath: _imagePathController.text,
+        // Gunakan path gambar yang baru
+        imagePath: imageToSave, 
         isFavorite: widget.recipe?.isFavorite ?? false,
       );
 
@@ -100,12 +129,54 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                 validator: (value) => value == null || value.isEmpty ? 'Masukkan kategori' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _imagePathController,
-                decoration: const InputDecoration(labelText: 'Path Gambar (contoh: assets/images/food.jpg)'),
-                validator: (value) => value == null || value.isEmpty ? 'Masukkan path gambar' : null,
+              
+              // *** Ganti TextFormField untuk Path Gambar dengan Tombol Pilih Gambar ***
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // Pratinjau Gambar yang Dipilih
+                    if (_imagePath != null) ...[
+                      // Cek apakah path adalah path file lokal atau path asset
+                      _imagePath!.startsWith('assets/')
+                          ? Image.asset(
+                              _imagePath!,
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(_imagePath!),
+                              height: 150,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            ),
+                      const SizedBox(height: 8),
+                    ],
+                    
+                    ElevatedButton.icon(
+                      onPressed: _pickImage,
+                      icon: const Icon(Icons.image),
+                      label: Text(_imagePath != null ? 'Ubah Gambar' : 'Pilih Gambar dari Galeri'),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _imagePath != null 
+                        ? 'Gambar Terpilih: ${_imagePath!.split('/').last}'
+                        : 'Belum ada gambar yang dipilih',
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
               ),
+              
               const SizedBox(height: 24),
+              
+              // *** Bagian Bahan-bahan ***
               Text('Bahan-bahan', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               ...List.generate(_ingredients.length, (index) {
@@ -156,7 +227,10 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                   });
                 },
               ),
+              
               const SizedBox(height: 24),
+              
+              // *** Bagian Langkah-langkah ***
               Text('Langkah-langkah', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
               ...List.generate(_steps.length, (index) {
@@ -193,6 +267,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
                   });
                 },
               ),
+              
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: _saveRecipe,

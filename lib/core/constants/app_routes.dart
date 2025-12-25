@@ -5,4 +5,5 @@ class AppRoutes {
   static const String interactiveCooking = '/interactive-cooking';
   static const String search = '/search';
   static const String favorites = '/favorites';
+  static const String stats = '/stats';
 }
