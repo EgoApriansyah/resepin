@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../recipe/providers/recipe_provider.dart';
 import '../../recipe/widgets/recipe_card_widget.dart';
 import '../../../core/constants/app_routes.dart';
+import 'package:resepin/core/constants/app_colors.dart';
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
@@ -26,6 +27,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         title: const Text(
           'Resep Favorit',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 20),
@@ -101,7 +103,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
           ),
           
           _navItem(Icons.bar_chart_rounded, "Stats", 2, () => Navigator.pushNamed(context, AppRoutes.stats)),
-          _navItem(Icons.person_rounded, "Profile", 3, () {}),
+          _navItem(Icons.person_rounded, "Profile", 3, () => Navigator.pushNamed(context, AppRoutes.profile)),
         ],
       ),
     );
@@ -116,7 +118,7 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
         children: [
           Icon(
             icon, 
-            color: isSelected ? const Color(0xFF6486F6) : Colors.grey.shade300, 
+            color: isSelected ? AppColors.primary : Colors.grey.shade300, 
             size: 26
           ),
           const SizedBox(height: 4),

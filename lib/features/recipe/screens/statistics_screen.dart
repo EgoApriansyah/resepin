@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/recipe_provider.dart';
 import '../../../core/constants/app_routes.dart';
 import '../../../core/utils/generic.dart';
+import 'package:resepin/core/constants/app_colors.dart';
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -24,6 +25,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false,
         title: const Text(
           'Statistik Resep',
           style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
@@ -181,7 +183,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ),
           
           _navItem(Icons.bar_chart_rounded, "Stats", 2, () {}),
-          _navItem(Icons.person_rounded, "Profile", 3, () {}),
+          _navItem(Icons.person_rounded, "Profile", 3, () => Navigator.pushNamed(context, AppRoutes.profile)),
         ],
       ),
     );
@@ -194,7 +196,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? const Color(0xFF6486F6) : Colors.grey.shade300, size: 26),
+          Icon(icon, color: isSelected ? AppColors.primary : Colors.grey.shade300, size: 26),
           const SizedBox(height: 4),
           Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Colors.black : Colors.grey.shade400)),
         ],

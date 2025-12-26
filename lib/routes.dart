@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:resepin/features/recipe/screens/add_edit_recipe_screen.dart';
 import 'package:resepin/features/recipe/screens/interactive_cooking_screen.dart';
+import 'package:resepin/features/recipe/screens/profile_screen.dart';
 import 'package:resepin/features/recipe/screens/recipe_detail_screen.dart';
 import 'package:resepin/features/recipe/screens/recipe_home_screen.dart';
 import 'package:resepin/features/recipe/screens/statistics_screen.dart';
 import 'package:resepin/features/search/screens/search_screen.dart';
 import 'package:resepin/features/favorite/screens/favorite_screen.dart';
+import 'package:resepin/features/auth/screens/login_screen.dart';
+import 'package:resepin/features/auth/screens/register_screen.dart';
 import 'core/constants/app_routes.dart';
 import 'package:resepin/data/models/recipe_model.dart';
 
@@ -44,6 +47,15 @@ class AppRoutesGenerator {
 
       case AppRoutes.favorites:
         return MaterialPageRoute(builder: (_) => const FavoriteScreen());
+
+      case '/login':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+
+      case '/register':
+        return MaterialPageRoute(builder: (_) => const RegisterScreen());
+
+      case AppRoutes.profile:
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
 
       default:
         return MaterialPageRoute(

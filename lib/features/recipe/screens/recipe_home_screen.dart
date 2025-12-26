@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:resepin/core/constants/app_colors.dart';
 import '../providers/recipe_provider.dart';
 import '../widgets/recipe_card_widget.dart';
 import '../../../core/constants/app_routes.dart';
@@ -187,7 +188,7 @@ class _RecipeHomeScreenState extends State<RecipeHomeScreen> {
           _navItem(Icons.favorite_rounded, "Favorites", 1, () => Navigator.pushNamed(context, AppRoutes.favorites)),
           _buildCenterAddButton(),
           _navItem(Icons.bar_chart_rounded, "Stats", 2, () => Navigator.pushNamed(context, AppRoutes.stats)),
-          _navItem(Icons.person_rounded, "Profile", 3, () {}),
+          _navItem(Icons.person_rounded, "Profile", 3, () => Navigator.pushNamed(context, AppRoutes.profile)),
         ],
       ),
     );
@@ -200,7 +201,7 @@ class _RecipeHomeScreenState extends State<RecipeHomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? const Color(0xFF6486F6) : Colors.grey.shade300, size: 26),
+          Icon(icon, color: isSelected ?  AppColors.primary : Colors.grey.shade300, size: 26),
           const SizedBox(height: 4),
           Text(label, style: TextStyle(fontSize: 10, color: isSelected ? Colors.black : Colors.grey.shade400)),
         ],

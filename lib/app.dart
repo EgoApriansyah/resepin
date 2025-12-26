@@ -16,7 +16,7 @@ class RecipeApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Resepin',
         theme: appTheme(),
-        initialRoute: AppRoutes.home,
+        initialRoute: AppRoutes.login,
         onGenerateRoute: AppRoutesGenerator.generateRoute,
         debugShowCheckedModeBanner: false,
       ),
