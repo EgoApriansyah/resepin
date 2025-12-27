@@ -117,7 +117,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             // 2. INFO USER (MENGGUNAKAN CAPITALIZE)
             Text(
-              // Sebelumnya .toUpperCase(), sekarang menggunakan .capitalize()
               user?['username']?.toString().capitalize() ?? 'Chef Resepin',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),

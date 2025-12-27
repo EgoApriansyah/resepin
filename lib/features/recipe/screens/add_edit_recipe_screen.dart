@@ -1,17 +1,14 @@
-// lib/features/recipe/screens/add_edit_recipe_screen.dart
-
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import '../../../core/constants/app_colors.dart'; // Pastikan path benar
 import '../providers/recipe_provider.dart';
 import 'package:resepin/data/models/recipe_model.dart';
 import 'package:resepin/data/models/ingredient_model.dart';
-// Tambahkan import ini
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 
 class AddEditRecipeScreen extends StatefulWidget {
   final Recipe? recipe;
-
   const AddEditRecipeScreen({super.key, this.recipe});
 
   @override
@@ -23,9 +20,7 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _categoryController;
-  
-  // Ubah dari TextEditingController menjadi String?
-  String? _imagePath; // Menyimpan path file gambar lokal
+  String? _imagePath;
 
   List<String> _steps = [''];
   List<Ingredient> _ingredients = [Ingredient(name: '', amount: 0, unit: '')];
@@ -37,13 +32,8 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
     _nameController = TextEditingController(text: recipe?.name ?? '');
     _descriptionController = TextEditingController(text: recipe?.description ?? '');
     _categoryController = TextEditingController(text: recipe?.category ?? '');
-    
-    // Inisialisasi _imagePath dari data resep yang ada
-    if (recipe != null && recipe.imagePath != 'assets/images/placeholder.jpg') {
-      _imagePath = recipe.imagePath;
-    } else {
-      _imagePath = null;
-    }
+    _imagePath = (recipe != null && recipe.imagePath != 'assets/images/placeholder.jpg') 
+        ? recipe.imagePath : null;
 
     if (recipe != null) {
       _steps = List.from(recipe.steps);
@@ -58,224 +48,268 @@ class _AddEditRecipeScreenState extends State<AddEditRecipeScreen> {
     _categoryController.dispose();
     super.dispose();
   }
-  
-  // *** FUNGSI BARU: Pilih Gambar ***
+
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (pickedFile != null) {
-      setState(() {
-        _imagePath = pickedFile.path;
-      });
+      setState(() => _imagePath = pickedFile.path);
     }
   }
 
   void _saveRecipe() {
     if (_formKey.currentState!.validate()) {
-      // Tentukan path gambar yang akan disimpan. Gunakan placeholder jika kosong.
-      final imageToSave = _imagePath ?? 'assets/images/placeholder.jpg';
-      
       final newRecipe = Recipe(
         id: widget.recipe?.id,
         name: _nameController.text,
         description: _descriptionController.text,
         category: _categoryController.text,
-        steps: _steps.where((s) => s.isNotEmpty).toList(),
-        ingredients: _ingredients.where((i) => i.name.isNotEmpty).toList(),
-        // Gunakan path gambar yang baru
-        imagePath: imageToSave, 
+        steps: _steps.where((s) => s.trim().isNotEmpty).toList(),
+        ingredients: _ingredients.where((i) => i.name.trim().isNotEmpty).toList(),
+        imagePath: _imagePath ?? 'assets/images/placeholder.jpg',
         isFavorite: widget.recipe?.isFavorite ?? false,
       );
 
       if (widget.recipe == null) {
-        Provider.of<RecipeProvider>(context, listen: false).addRecipe(newRecipe);
+        context.read<RecipeProvider>().addRecipe(newRecipe);
       } else {
-        Provider.of<RecipeProvider>(context, listen: false).updateRecipe(newRecipe);
+        context.read<RecipeProvider>().updateRecipe(newRecipe);
       }
-      Navigator.of(context).pop();
+      Navigator.pop(context);
     }
+  }
+
+  // Helper untuk Decorasi Input ala Dribbble
+  InputDecoration _inputDecor(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+      labelStyle: const TextStyle(color: Colors.grey),
+      floatingLabelStyle: const TextStyle(color: AppColors.primary),
+      filled: true,
+      fillColor: Colors.white,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: Colors.grey.shade200),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Colors.redAccent),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(widget.recipe == null ? 'Tambah Resep' : 'Edit Resep'),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.black),
+        title: Text(
+          widget.recipe == null ? 'Buat Resep Baru' : 'Edit Resep',
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
       ),
       body: Form(
         key: _formKey,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // 1. Image Picker Section
+              GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10)],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: _imagePath != null
+                        ? (_imagePath!.startsWith('assets/')
+                            ? Image.asset(_imagePath!, fit: BoxFit.cover)
+                            : Image.file(File(_imagePath!), fit: BoxFit.cover))
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: const [
+                              Icon(Icons.add_a_photo_rounded, size: 50, color: AppColors.primary),
+                              SizedBox(height: 8),
+                              Text('Tambahkan Foto Masakan', style: TextStyle(color: Colors.grey)),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 25),
+
+              // 2. Info Utama Section
+              _sectionTitle("Informasi Umum"),
               TextFormField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Nama Resep'),
-                validator: (value) => value == null || value.isEmpty ? 'Masukkan nama resep' : null,
+                decoration: _inputDecor('Nama Masakan', Icons.restaurant_menu),
+                validator: (v) => v!.isEmpty ? 'Nama tidak boleh kosong' : null,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Deskripsi'),
-                maxLines: 3,
-                validator: (value) => value == null || value.isEmpty ? 'Masukkan deskripsi' : null,
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 15),
               TextFormField(
                 controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Kategori'),
-                validator: (value) => value == null || value.isEmpty ? 'Masukkan kategori' : null,
+                decoration: _inputDecor('Kategori (Contoh: Dessert)', Icons.category_outlined),
+                validator: (v) => v!.isEmpty ? 'Kategori wajib diisi' : null,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 15),
+              TextFormField(
+                controller: _descriptionController,
+                maxLines: 3,
+                decoration: _inputDecor('Ceritakan sedikit tentang resep ini...', Icons.description_outlined),
+              ),
+              const SizedBox(height: 30),
+
+              // 3. Ingredients Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _sectionTitle("Bahan-bahan"),
+                  TextButton.icon(
+                    onPressed: () => setState(() => _ingredients.add(Ingredient(name: '', amount: 0, unit: ''))),
+                    icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                    label: const Text('Tambah', style: TextStyle(color: AppColors.primary)),
+                  )
+                ],
+              ),
+              ...List.generate(_ingredients.length, (index) => _buildIngredientRow(index)),
+              const SizedBox(height: 30),
+
+              // 4. Steps Section
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _sectionTitle("Langkah Memasak"),
+                  TextButton.icon(
+                    onPressed: () => setState(() => _steps.add('')),
+                    icon: const Icon(Icons.add_circle_outline, color: AppColors.primary),
+                    label: const Text('Tambah', style: TextStyle(color: AppColors.primary)),
+                  )
+                ],
+              ),
+              ...List.generate(_steps.length, (index) => _buildStepRow(index)),
               
-              // *** Ganti TextFormField untuk Path Gambar dengan Tombol Pilih Gambar ***
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8.0),
+              const SizedBox(height: 40),
+
+              // 5. Submit Button
+              SizedBox(
+                width: double.infinity,
+                height: 55,
+                child: ElevatedButton(
+                  onPressed: _saveRecipe,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+                    elevation: 5,
+                    shadowColor: AppColors.primary.withOpacity(0.4),
+                  ),
+                  child: const Text('Simpan Resep Lezat', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    // Pratinjau Gambar yang Dipilih
-                    if (_imagePath != null) ...[
-                      // Cek apakah path adalah path file lokal atau path asset
-                      _imagePath!.startsWith('assets/')
-                          ? Image.asset(
-                              _imagePath!,
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(_imagePath!),
-                              height: 150,
-                              width: double.infinity,
-                              fit: BoxFit.cover,
-                            ),
-                      const SizedBox(height: 8),
-                    ],
-                    
-                    ElevatedButton.icon(
-                      onPressed: _pickImage,
-                      icon: const Icon(Icons.image),
-                      label: Text(_imagePath != null ? 'Ubah Gambar' : 'Pilih Gambar dari Galeri'),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _imagePath != null 
-                        ? 'Gambar Terpilih: ${_imagePath!.split('/').last}'
-                        : 'Belum ada gambar yang dipilih',
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
               ),
-              
-              const SizedBox(height: 24),
-              
-              // *** Bagian Bahan-bahan ***
-              Text('Bahan-bahan', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              ...List.generate(_ingredients.length, (index) {
-                return Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: TextFormField(
-                        initialValue: _ingredients[index].name,
-                        decoration: const InputDecoration(labelText: 'Nama Bahan'),
-                        onChanged: (value) => _ingredients[index] = _ingredients[index].copyWith(name: value),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: _ingredients[index].amount.toString(),
-                        decoration: const InputDecoration(labelText: 'Jumlah'),
-                        keyboardType: TextInputType.number,
-                        onChanged: (value) => _ingredients[index] = _ingredients[index].copyWith(amount: double.tryParse(value) ?? 0),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: _ingredients[index].unit,
-                        decoration: const InputDecoration(labelText: 'Satuan'),
-                        onChanged: (value) => _ingredients[index] = _ingredients[index].copyWith(unit: value),
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _ingredients.removeAt(index);
-                        });
-                      },
-                    ),
-                  ],
-                );
-              }),
-              TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Tambah Bahan'),
-                onPressed: () {
-                  setState(() {
-                    _ingredients.add(Ingredient(name: '', amount: 0, unit: ''));
-                  });
-                },
-              ),
-              
-              const SizedBox(height: 24),
-              
-              // *** Bagian Langkah-langkah ***
-              Text('Langkah-langkah', style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 8),
-              ...List.generate(_steps.length, (index) {
-                return Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        initialValue: _steps[index],
-                        decoration: InputDecoration(
-                          labelText: 'Langkah ${index + 1}',
-                          alignLabelWithHint: true,
-                        ),
-                        maxLines: 2,
-                        onChanged: (value) => _steps[index] = value,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle, color: Colors.red),
-                      onPressed: () {
-                        setState(() {
-                          _steps.removeAt(index);
-                        });
-                      },
-                    ),
-                  ],
-                );
-              }),
-              TextButton.icon(
-                icon: const Icon(Icons.add),
-                label: const Text('Tambah Langkah'),
-                onPressed: () {
-                  setState(() {
-                    _steps.add('');
-                  });
-                },
-              ),
-              
-              const SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: _saveRecipe,
-                child: const Text('Simpan Resep'),
-              ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _sectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 4),
+      child: Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+    );
+  }
+
+  Widget _buildIngredientRow(int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey.shade100),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: TextFormField(
+              initialValue: _ingredients[index].name,
+              decoration: const InputDecoration(hintText: 'Nama Bahan', border: InputBorder.none, contentPadding: EdgeInsets.symmetric(horizontal: 10)),
+              onChanged: (v) => _ingredients[index] = _ingredients[index].copyWith(name: v),
+            ),
+          ),
+          Container(width: 1, height: 30, color: Colors.grey.shade200),
+          Expanded(
+            flex: 1,
+            child: TextFormField(
+              initialValue: _ingredients[index].amount == 0 ? '' : _ingredients[index].amount.toString(),
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              decoration: const InputDecoration(hintText: 'Jml', border: InputBorder.none),
+              onChanged: (v) => _ingredients[index] = _ingredients[index].copyWith(amount: double.tryParse(v) ?? 0),
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: TextFormField(
+              initialValue: _ingredients[index].unit,
+              decoration: const InputDecoration(hintText: 'Unit', border: InputBorder.none),
+              onChanged: (v) => _ingredients[index] = _ingredients[index].copyWith(unit: v),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.remove_circle_outline, color: Colors.redAccent, size: 20),
+            onPressed: () => setState(() => _ingredients.removeAt(index)),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepRow(int index) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: AppColors.primary.withOpacity(0.1),
+            child: Text('${index + 1}', style: const TextStyle(color: AppColors.primary, fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: TextFormField(
+              initialValue: _steps[index],
+              maxLines: null,
+              decoration: _inputDecor('Langkah ke-${index + 1}', Icons.edit_note).copyWith(prefixIcon: null),
+              onChanged: (v) => _steps[index] = v,
+            ),
+          ),
+          IconButton(
+            padding: const EdgeInsets.only(top: 12),
+            icon: const Icon(Icons.delete_outline, color: Colors.grey),
+            onPressed: () => setState(() => _steps.removeAt(index)),
+          )
+        ],
       ),
     );
   }
